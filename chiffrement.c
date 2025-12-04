@@ -186,7 +186,7 @@ string VigenereCipher(string text, string key, int mode) {
 }
 
 /* ----- Cipher : Encode base64 -> Vigenere -> Decode base64 ----- */
-void cipher(string filename, string key) {
+void cipher_total(string filename, string key) {
     FILE *f = fopen(filename, "rb");
     if (!f) { perror("fopen"); exit(EXIT_FAILURE); }
 
@@ -225,7 +225,7 @@ void cipher(string filename, string key) {
 }
 
 /* ----- Decipher : Encode base64 -> Vigenere inverse -> Decode base64 ----- */
-void decipher(string filename, string key) {
+void decipher_total(string filename, string key) {
     FILE *f = fopen(filename, "rb");
     if (!f) { perror("fopen"); exit(EXIT_FAILURE); }
 
@@ -261,6 +261,67 @@ void decipher(string filename, string key) {
     fwrite(decoded, 1, out_len, out);
     fclose(out);
     free(decoded);
+}
+
+/* ----- Cipher : fichier en base64 -> Vigenere  ----- */
+void cipher(string filename, string key) {
+    FILE *f = fopen(filename, "rb");
+    if (!f) { perror("fopen"); exit(EXIT_FAILURE); }
+
+    string key_copy = malloc(strlen(key)+1);
+    strcpy(key_copy, key);
+    delete_padding(key_copy);
+
+    long file_size = size_of_file(f);
+
+    //Lire tout le fichier en mémoire
+    unsigned string data = malloc(file_size);
+    fread(data, 1, file_size, f);
+    fclose(f);
+
+    //Vigenère sur le Base64 complet
+    string vigenere = VigenereCipher(data, key_copy, 0);
+    size_t out_len = file_size;
+
+    //Écriture du fichier chiffré
+    FILE *out = fopen(filename, "wb");
+    fwrite(vigenere, 1, out_len, out);
+    fclose(out);
+
+    free(vigenere);
+    free(data);
+    free(key_copy);
+}
+
+/* ----- Cipher : fichier décodé en base64 -> Vigenere  ----- */
+void decipher(string filename, string key) {
+    FILE *f = fopen(filename, "rb");
+    if (!f) { perror("fopen"); exit(EXIT_FAILURE); }
+
+    string key_copy = malloc(strlen(key)+1);
+    strcpy(key_copy, key);
+    delete_padding(key_copy);
+
+    long file_size = size_of_file(f);   
+
+    //Lire tout le fichier en mémoire
+    unsigned string data = malloc(file_size);
+    fread(data, 1, file_size, f);
+    fclose(f);
+
+
+    //Vigenère sur le Base64 complet
+    string vigenere = VigenereCipher(data, key_copy, 1);
+    size_t out_len = file_size;
+
+    //Écriture du fichier chiffré
+    FILE *out = fopen(filename, "wb");
+    fwrite(vigenere, 1, out_len, out);
+    fclose(out);
+
+    free(vigenere);
+    free(data);
+    free(key_copy);
 }
 
 /*

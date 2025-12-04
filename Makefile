@@ -1,25 +1,59 @@
-cipher: cipher_main.o chiffrement.o
-	gcc cipher_main.o chiffrement.o -o cipher
+#----------Bibliothèque statique----------
 
-decipher: decipher_main.o chiffrement.o
-	gcc decipher_main.o chiffrement.o -o decipher
+libchiffrement.a: chiffrement.o
+	ar rcs libchiffrement.a chiffrement.o
 
-findkey: findkey_main.o chiffrement.o
-	gcc findkey_main.o chiffrement.o -o findkey
 
-cipher_main.o: cipher_main.c chiffrement.h
-	gcc -c cipher_main.c
+#----------Executables----------
 
-decipher_main.o: decipher_main.c chiffrement.h
-	gcc -c decipher_main.c
+cipher: cipher.o libchiffrement.a
+	gcc cipher.o libchiffrement.a -o cipher
 
-findkey_main.o: findkey_main.c chiffrement.h
-	gcc -c findkey_main.c
+decipher: decipher.o libchiffrement.a
+	gcc decipher.o libchiffrement.a -o decipher
+
+findkey: findkey.o libchiffrement.a
+	gcc findkey.o libchiffrement.a -o findkey
+
+cipher_total: cipher_total.o libchiffrement.a
+	gcc cipher_total.o libchiffrement.a -o cipher_total
+
+decipher_total: decipher_total.o libchiffrement.a
+	gcc decipher_total.o libchiffrement.a -o decipher_total
+
+
+#----------Objets----------
+
+cipher.o: cipher.c chiffrement.h
+	gcc -c cipher.c
+
+decipher.o: decipher.c chiffrement.h
+	gcc -c decipher.c
+
+findkey.o: findkey.c chiffrement.h
+	gcc -c findkey.c
+
+cipher_total.o: cipher_total.c chiffrement.h
+	gcc -c cipher_total.c
+
+decipher_total.o: decipher_total.c chiffrement.h
+	gcc -c decipher_total.c
 
 chiffrement.o: chiffrement.c chiffrement.h
 	gcc -c chiffrement.c
 
-all: cipher decipher findkey
 
-clean:
-	rm -f *.o cipher decipher findkey
+#----------Création----------
+
+all: libchiffrement.a cipher decipher findkey cipher_total decipher_total
+
+lib: libchiffrement.a
+
+
+#----------Nettoyage----------
+
+clean_all:
+	rm -f *.o cipher decipher findkey cipher_total decipher_total libchiffrement.a
+
+clean_o:
+	rm -f *.o

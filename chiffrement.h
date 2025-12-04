@@ -27,6 +27,8 @@ void delete_padding(char *s);
 string base64_encode(const unsigned string data, size_t input_length, size_t *output_length);
 unsigned string base64_decode(const string data, size_t input_length, size_t *output_length);
 string VigenereCipher(string text, string key, int mode);
+void cipher_total(string filename, string key);
+void decipher_total(string filename, string key);
 void cipher(string filename, string key);
 void decipher(string filename, string key);
 void findkey(string plainname, string cipheredname);
