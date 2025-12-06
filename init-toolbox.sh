@@ -1,6 +1,6 @@
 #!/bin/bash
-#Vérifie l'existence dossier .sh-toolbox
 
+#Vérifie l'existence dossier .sh-toolbox
 if [ -d ".sh-toolbox" ]; then
 	echo "Le dossier .sh-toolbox existe"
 else
