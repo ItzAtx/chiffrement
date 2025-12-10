@@ -21,6 +21,8 @@ cipher_total: cipher_total.o libchiffrement.a
 decipher_total: decipher_total.o libchiffrement.a
 	gcc decipher_total.o libchiffrement.a -o decipher_total
 
+findkey_total: findkey_total.o libchiffrement.a
+	gcc findkey_total.o libchiffrement.a -o findkey_total
 
 #----------Objets----------
 
@@ -42,10 +44,11 @@ decipher_total.o: decipher_total.c chiffrement.h
 chiffrement.o: chiffrement.c chiffrement.h
 	gcc -c chiffrement.c
 
-
+findkey_total.o: findkey_total.c chiffrement.h
+	gcc -c findkey_total.c
 #----------Création----------
 
-all: libchiffrement.a cipher decipher findkey cipher_total decipher_total
+all: libchiffrement.a cipher decipher findkey cipher_total decipher_total findkey_total
 
 lib: libchiffrement.a
 
@@ -53,7 +56,7 @@ lib: libchiffrement.a
 #----------Nettoyage----------
 
 clean_all:
-	rm -f *.o cipher decipher findkey cipher_total decipher_total libchiffrement.a
+	rm -f *.o cipher decipher findkey cipher_total decipher_total findkey_total libchiffrement.a
 
 clean_o:
 	rm -f *.o

@@ -185,7 +185,7 @@ string VigenereCipher(string text, string key, int mode) {
     return res;
 }
 
-/* ----- Cipher : Encode base64 -> Vigenere -> Decode base64 ----- */
+/* ----- Cipher_total : Encode base64 -> Vigenere -> Decode base64 ----- */
 void cipher_total(string filename, string key) {
     FILE *f = fopen(filename, "rb");
     if (!f) { perror("fopen"); exit(EXIT_FAILURE); }
@@ -224,7 +224,7 @@ void cipher_total(string filename, string key) {
     free(decoded);
 }
 
-/* ----- Decipher : Encode base64 -> Vigenere inverse -> Decode base64 ----- */
+/* ----- Decipher_total : Encode base64 -> Vigenere inverse -> Decode base64 ----- */
 void decipher_total(string filename, string key) {
     FILE *f = fopen(filename, "rb");
     if (!f) { perror("fopen"); exit(EXIT_FAILURE); }
@@ -326,6 +326,104 @@ void decipher(string filename, string key) {
 
 /*
 Paramètres :
+plain_name : chemin vers le fichier en clair (en b64; après l'avoir encodé)
+ciphered_name : chemin vers le fichier chiffré (en b64; après l'avoir encodé)
+
+Renvoie la clé de chiffrement utilisée sur stdout et sa taille sur stderr
+
+Cette fonction détermine la clé qui a été utilisée pour transformer plain_name en ciphered_name
+*/
+void findkey(string plain_name, string ciphered_name){
+    FILE *plain = fopen(plain_name, "rb");
+    FILE *ciphered = fopen(ciphered_name, "rb");
+
+    //Calcul de la taille des fichier
+    long plain_size = size_of_file(plain); 
+    long ciphered_size = size_of_file(ciphered); 
+
+    //Allocation et lecture des données
+    unsigned string plain_data = malloc(plain_size);
+    fread(plain_data, 1, plain_size, plain);
+    fclose(plain);
+
+    unsigned string ciphered_data = malloc(ciphered_size);
+    fread(ciphered_data, 1, ciphered_size, ciphered);
+    fclose(ciphered);
+
+    //Si ils ne font pas la même tailles, cela signifie que ce ne sont pas les mêmes fichiers
+    if (plain_size != ciphered_size){
+        printf("ERREUR : Les deux fichiers ne sont pas de la même taille, ils ne correspondent pas\n");
+        exit(EXIT_FAILURE);
+    }
+
+    //Allocation de l'espace pour la clé répétée
+    string repeted_key = malloc(plain_size + 1);
+    repeted_key[plain_size] = '\0';
+
+
+    for (int i = 0; i < plain_size; i++){
+        //Pour chaque caractère des données, on cherche sa position dans la table d'encodage
+        int pos_plain = strchr(encoding_table, plain_data[i]) - encoding_table;
+        int pos_ciphered = strchr(encoding_table, ciphered_data[i]) - encoding_table;
+        //On recalcule le décalage de Vigenère (la clé)
+        int k = (pos_ciphered - pos_plain + 64) % 64; //(contraire de celui fait dans Vigenère)
+        repeted_key[i] = encoding_table[k];
+    }
+
+    //On essaye de trouver une répétition
+    int key_len = 0;
+    for (int L = 1; L <= plain_size; L++){ //Tant qu'on a pas trouvé une longueur, on test avec une plus grande
+        int ok = 1;
+
+        for (int i = 0; i < plain_size - 4; i++){ //-4 pour éviter les 4 derniers caractères qui peuvent être affectés par le padding
+            if (repeted_key[i] != repeted_key[i % L]){    //Si pour tout i : repeted_key[i] == repeted_key[i % L], alors la séquence se répète tous les L caractères (Donc la clé = les L premiers caractères)
+                ok = 0;
+                break;
+            }
+        }
+
+        if (ok){
+            key_len = L;
+            break;
+        }
+    }
+
+    //On stock la clé
+    string key_b64 = malloc(key_len + 1);
+    for (int i = 0; i < key_len; i++){
+        key_b64[i] = repeted_key[i];
+    }
+    key_b64[key_len] = '\0';
+
+    //On rajoute des paddings si besoin pour que la taille de la clé soit un multiple de 4
+    int padded_len = key_len;
+    while (padded_len % 4 != 0) padded_len++;
+
+    string key_b64_padded = malloc(padded_len + 1);
+    strcpy(key_b64_padded, key_b64);
+
+    for (int i = key_len; i < padded_len; i++){
+        key_b64_padded[i] = '=';
+    }
+    key_b64_padded[padded_len] = '\0';
+
+    //On decode la clé (elle était en b64)
+    size_t real_key_size;
+    unsigned string real_key = base64_decode(key_b64_padded, padded_len, &real_key_size);
+
+    printf("%s\n", real_key);
+    fprintf(stderr, "%ld\n", real_key_size);
+
+    free(plain_data);
+    free(ciphered_data);
+    free(repeted_key);
+    free(key_b64);
+    free(key_b64_padded);
+    free(real_key);
+}
+
+/*
+Paramètres :
 plain_name : chemin vers le fichier en clair
 ciphered_name : chemin vers le fichier chiffré
 
@@ -333,7 +431,7 @@ Renvoie la clé de chiffrement utilisée sur stdout et sa taille sur stderr
 
 Cette fonction détermine la clé qui a été utilisée pour transformer plain_name en ciphered_name
 */
-void findkey(string plain_name, string ciphered_name){
+void findkey_total(string plain_name, string ciphered_name){
     FILE *plain = fopen(plain_name, "rb");
     FILE *ciphered = fopen(ciphered_name, "rb");
 
@@ -418,7 +516,7 @@ void findkey(string plain_name, string ciphered_name){
     size_t real_key_size;
     unsigned string real_key = base64_decode(key_b64_padded, padded_len, &real_key_size);
 
-    printf("Clé réelle : %s\n", real_key);
+    printf("%s\n", real_key);
     fprintf(stderr, "%ld\n", real_key_size);
 
     free(plain_data);
